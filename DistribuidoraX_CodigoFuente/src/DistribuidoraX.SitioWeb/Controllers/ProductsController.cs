@@ -2,6 +2,8 @@
 using DistribuidoraX.Shared.Dtos.ProductDtos;
 using DistribuidoraX.Shared.Dtos.ProductSupplierDtos;
 using DistribuidoraX.Shared.Dtos.SupplierDtos;
+using DistribuidoraX.Shared.Dtos.TypeProductDtos;
+using DistribuidoraX.Shared.Responses;
 using DistribuidoraX.Shared.Services.ProductServices;
 using DistribuidoraX.Shared.Services.ProductSupplierServices;
 using DistribuidoraX.Shared.Services.SupplierServices;
@@ -51,6 +53,7 @@ namespace DistribuidoraX.SitioWeb.Controllers
 
             try
             {
+
                 var typeProductApiResponse = await _typeProductQueriesService.GetListAsync();
                 if (typeProductApiResponse.StatusCode == (int)HttpStatusCode.OK)
                 {
@@ -68,6 +71,12 @@ namespace DistribuidoraX.SitioWeb.Controllers
                 }
                 else
                 {
+                    ApiResponse_Loggin<List<TypeProductDto>>(
+                                                                typeProductApiResponse, 
+                                                                nameof(_typeProductQueriesService.GetListAsync), 
+                                                                nameof(ProductsController.Index)
+                                                            );
+
                     productsViewModel.TypeProductMessageError = "El servicio no responde como se esperaba: Consulte al administrador del aplicativo.";
                 }
 
@@ -91,6 +100,12 @@ namespace DistribuidoraX.SitioWeb.Controllers
                 }
                 else
                 {
+                    ApiResponse_Loggin<List<ProductBaseDto>>(
+                                                                productsApiResponse,
+                                                                nameof(_productQueriesService.GetListByFiltersAsync),
+                                                                nameof(ProductsController.Index)
+                                                            );
+
                     productsTableModel.ProductListErrorMessage = "El servicio no responde como se esperaba: Consulte al administrador del aplicativo.";
                 }
 
@@ -145,6 +160,12 @@ namespace DistribuidoraX.SitioWeb.Controllers
                 }
                 else
                 {
+                    ApiResponse_Loggin<List<ProductBaseDto>>(
+                                                                productsApiResponse,
+                                                                nameof(_productQueriesService.GetListByFiltersAsync),
+                                                                nameof(ProductsController.SearchProducts)
+                                                            );
+
                     productsTableViewModel.ProductListErrorMessage = "El servicio no responde como se esperaba: Consulte al administrador del aplicativo.";
                 }
 
@@ -168,14 +189,31 @@ namespace DistribuidoraX.SitioWeb.Controllers
         {
             try
             {
-                var productApiResponse = await _productQueriesService.ProductByIdAsync(item);
                 DeleteProductViewModel deleteProductViewModel = new();
-                if (productApiResponse.Value != null)
+                var productApiResponse = await _productQueriesService.ProductByIdAsync(item);
+                if (productApiResponse.StatusCode == (int)HttpStatusCode.OK)
                 {
-                    deleteProductViewModel.ItemProduct = productApiResponse.Value.ProductItem;
-                    deleteProductViewModel.NameProduct = productApiResponse.Value.ProductName;
-                    deleteProductViewModel.CodeProduct = productApiResponse.Value.ProductCode;
-                    deleteProductViewModel.PriceProduct = productApiResponse.Value.ProductPrice;
+                    if (productApiResponse.Value != null)
+                    {
+                        deleteProductViewModel.ItemProduct = productApiResponse.Value.ProductItem;
+                        deleteProductViewModel.NameProduct = productApiResponse.Value.ProductName;
+                        deleteProductViewModel.CodeProduct = productApiResponse.Value.ProductCode;
+                        deleteProductViewModel.PriceProduct = productApiResponse.Value.ProductPrice;
+                    }
+                }
+                else
+                {
+                    ApiResponse_Loggin<ProductBaseDto>(
+                                                        productApiResponse,
+                                                        nameof(_productQueriesService.ProductByIdAsync),
+                                                        nameof(ProductsController.GetProductByConfirmDelete)
+                                                    );
+
+                    return PartialView("_GenericErrorPartialView", new CustomerErrorViewModel
+                    {
+                        genericMessage = $"El Api respondio con estatus {productApiResponse.StatusCode}: Consulte al administrador del aplicativo.",
+                        modalName = "delete"
+                    });
                 }
 
                 return PartialView("_DeleteProductPartialView", deleteProductViewModel);
@@ -201,7 +239,20 @@ namespace DistribuidoraX.SitioWeb.Controllers
             try
             {
                 var productDeletedApiResponse = await _productCommandsService.DeleteProductoAsync(item);
-                return Json(new { isSuccess = productDeletedApiResponse.Value, message = productDeletedApiResponse.Message });
+                if (productDeletedApiResponse.StatusCode == (int)HttpStatusCode.OK)
+                {
+                    return Json(new { isSuccess = productDeletedApiResponse.Value, message = productDeletedApiResponse.Message });
+                }
+                else
+                {
+                    ApiResponse_Loggin<bool>(
+                                                productDeletedApiResponse,
+                                                nameof(_productCommandsService.DeleteProductoAsync),
+                                                nameof(ProductsController.DeleteProduct)
+                                            );
+
+                    return Json(new { isSuccess = false, message = $"El servicio respondio con estatus {productDeletedApiResponse.StatusCode}: Consulte al administrador del aplicativo." });
+                }
             }
             catch (HttpRequestException ex)
             {
@@ -1026,6 +1077,22 @@ namespace DistribuidoraX.SitioWeb.Controllers
             }
 
             return Json(new { isSuccess = false, message = "Algo salió mal: Consulte al administrador del aplicativo." });
+        }
+
+        private void ApiResponse_Loggin<T>(IGenericResult<T> apiResponse, string methodeServiceName, string currentMethode)
+        {
+            Log.Error("GenericMessage: El servicio {methodeServiceName} no responde como se esperaba | " +
+                                "CurrentMethod: {currentMethode} | " +
+                                "IsSuccessApiResponse: {IsSuccess} | " +
+                                "HttpCodeApiResponse: {StatusCode} | " +
+                                "MessageApiResponse: {Message} | " +
+                                "ErrorApiResponse: {Error}",
+                                methodeServiceName,
+                                currentMethode,
+                                apiResponse.IsSuccess,
+                                apiResponse.StatusCode,
+                                apiResponse.Message,
+                                apiResponse.Error);
         }
 
     }

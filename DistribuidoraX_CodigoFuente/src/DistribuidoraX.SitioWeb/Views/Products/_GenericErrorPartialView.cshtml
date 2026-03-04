@@ -1,0 +1,22 @@
+﻿@using DistribuidoraX.SitioWeb.Models.CustomerErrorsModels.ViewModels
+@model CustomerErrorViewModel
+
+<div class="container p-0">
+    <h3 class="text-danger">¡Ups! Algo salió mal.</h3>
+
+    <div class="container mt-2 mb-5 border-top border-bottom border-dark pt-1">
+        <div class="row mt-3 mb-3">
+            <p>@Model.genericMessage</p>
+        </div>
+
+        @if (!Model.ErrorMessage.Equals(string.Empty))
+        {
+            <div class="row mb-3">
+                <p> Detalle: @Model.ErrorMessage</p>
+            </div>
+        }
+    </div>
+    <div class="text-center mt-5 mb-3">
+        <button onclick="cancelOperationCloseModal('@Model.modalName.ToLower()')" class="btn btn-secondary me-4">Aceptar</button>
+    </div>
+</div>
