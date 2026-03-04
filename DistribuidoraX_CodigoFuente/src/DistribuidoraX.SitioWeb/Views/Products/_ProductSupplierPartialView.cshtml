@@ -1,0 +1,71 @@
+﻿@using DistribuidoraX.SitioWeb.Models.ProductSuplierModels.ViewModels
+@model ProductSupplierViewModel
+
+<div class="container-fluid mt-2">
+    <div class="card-body mb-3 border-top border-bottom border-dark ps-0 pe-0 pt-lg-2">
+        <div class="row mb-2">
+            <div class="col-md-2">
+                <label asp-for="ProductCode"></label>
+            </div>
+            <div class="col-md-3 mb-2 mb-sm-2">
+                <input asp-for="ProductCode" onchange="productCodeFieldValidate(this.value, @Model.ProductItem)" class="form-control w-75" placeholder="Clave del producto" />
+                <span id="productCodeSpanError" class="text-danger" style="display:none;"></span>
+            </div>
+            <div class="col-md-1"></div>
+            <div class="col-md-2 text-md-center text-sm-start">
+                <label asp-for="ProductName"></label>
+            </div>
+            <div class="col-md-4">
+                <input asp-for="ProductName" onchange="productNameFieldValidate(this.value)" class="form-control w-75" placeholder="Nombre del Producto" />
+                <span id="productNameSpanError" class="text-danger" style="display:none;"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-2">
+                <label asp-for="TypeProductId"></label>
+            </div>
+            <div class="col-md-3 mb-2 mb-sm-2">
+                <select asp-for="TypeProductId" onchange="typeProductMultiSelectValidate()"
+                        asp-items="@(new SelectList(Model.TypeProductList, "TypeProductItem", "TypeProductName"))"
+                        class="form-select">
+                    <option value="0">Todos</option>
+                </select>
+                <span id="typeProductItemSpanError" class="text-danger" style="display:none;"></span>
+            </div>
+
+            <div class="col-md-1"></div>
+
+            <div class="col-md-2 text-md-center text-sm-start">
+                <label asp-for="ProductActive"></label>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-check">
+                    @Html.CheckBoxFor(m => m.ProductActive, new { @class = "form-check-input", @id = "productActiveCheck" })
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-1 mt-4">
+            <div class="col-md-10">
+                <span>Proveedores</span>
+            </div>
+        </div>
+
+        <div class="row mb-1">
+            <div id="productSupplierTableContainer" class="col-md-12" style="padding-left:5%;padding-right:5%;">
+                <!-- Tabla -->
+                @await Html.PartialAsync("_ProductSuppliersTablePartialView", Model.ProductSupplierList)
+            </div>
+
+            <div class="col-md-12 text-end" style="padding-left:5%;padding-right:5%;">
+                <button onclick="confirmProductOperation('cancel','producto')" class="btn btn-secondary">Cancelar</button>
+                <button id="btnSaveProduct" onclick="confirmProductOperation('save','producto')" data-item="@Model.ProductItem" class="btn btn-primary">Guardar</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

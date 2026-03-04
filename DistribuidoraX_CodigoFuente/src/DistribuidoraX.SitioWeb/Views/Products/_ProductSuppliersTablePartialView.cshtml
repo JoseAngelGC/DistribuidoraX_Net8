@@ -1,0 +1,54 @@
+﻿@using DistribuidoraX.SitioWeb.Models.ProductSuplierModels
+@model List<ProductSupplierModel>
+
+<div class="table-responsive" style="height:230px; overflow-x:auto; overflow-y:auto; border: 1px solid #CCCC;">
+    <table id="elementoTabla" class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+            <tr class="text-center">
+                <th scope="col" class="position-sticky top-0">Editar</th>
+                <th scope="col" class="position-sticky top-0">Proveedor</th>
+                <th scope="col" class="position-sticky top-0">Clave Producto</th>
+                <th scope="col" class="position-sticky top-0 w-25">Costo</th>
+                <th scope="col" class="position-sticky top-0">Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @if (Model is not null || Model!.Count == 0)
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="display:none;">@item.ProductSupplierItem</td>
+                        <td class="text-center">
+                            <button onclick="showAddUpdateSupplier(@item.ProductSupplierItem)" class="btn btn-info" title="Editar"><i class="bi bi-pencil-fill text-black-50 fw-bold"></i></button>
+                        </td>
+                        <td>@item.SupplierName</td>
+                        <td>@item.ProductSupplierCode</td>
+                        <td><label>$</label><span class="float-end">@item.ProductSupplierCost.ToString("F", System.Globalization.CultureInfo.InvariantCulture)</span></td>
+                        <td class="text-center">
+                            <button onclick="deleteSupplierConfirmation(@item.ProductSupplierItem)" class="btn btn-danger" title="Eliminar"><i class="bi bi-x-lg"></i></button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td><h5 class="text-secondary text-center">¡No se encontraron registros!</h5></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>
+
+
+
+<div class="text-end mb-4">
+    <button id="btnAddSupplier" onclick="showAddUpdateSupplier(0)" class="btn btn-link open-modal pt-0" style="text-decoration:none;">Agregar Proveedor</button>
+</div>

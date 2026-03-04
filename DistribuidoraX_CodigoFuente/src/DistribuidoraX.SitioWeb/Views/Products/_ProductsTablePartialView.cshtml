@@ -1,0 +1,54 @@
+﻿@using DistribuidoraX.SitioWeb.Models.ProductModels.ViewModels
+@model ProductsTableViewModel
+
+<div class="table-responsive" style="max-height:250px; overflow-y:auto;">
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+            <tr class="text-center">
+                <th scope="col" class="position-sticky top-0">Editar</th>
+                <th scope="col" class="position-sticky top-0">Producto</th>
+                <th scope="col" class="position-sticky top-0">Clave Producto</th>
+                <th scope="col" class="position-sticky top-0 w-25">Precio</th>
+                <th scope="col" class="position-sticky top-0">Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @if (Model is not null && Model.ProductList!.Count > 0)
+            {
+                @foreach (var item in Model.ProductList)
+                {
+                    <tr>
+                        <td class="text-center">
+                            <button onclick="showAddUpdateProduct(@item.ProductItem)" class="btn btn-primary" title="Editar"><i class="bi bi-pencil-fill"></i></button>
+                        </td>
+                        <td>@item.ProductName</td>
+                        <td>@item.ProductCode</td>
+                        <td><label>$</label><span class="float-end">@item.ProductPrice.ToString("F", System.Globalization.CultureInfo.InvariantCulture)</span></td>
+                        <td class="text-center">
+                            <button onclick="deleteProductConfirmation(@item.ProductItem)" class="btn btn-danger" title="Eliminar"><i class="bi bi-x-lg"></i></button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td></td>
+                    <td></td>
+                    @if (Model!.ProductListErrorMessage.Equals(string.Empty))
+                    {
+                        <td><h5 class="text-secondary text-center">¡No se encontraron registros!</h5></td>
+                    }
+                    else
+                    {
+                        <td><h5 class="text-danger text-center">@Model.ProductListErrorMessage</h5></td>
+                    }
+                    <td></td>
+                    <td></td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,6 @@
+@DistribuidoraX.WebApi_HostAddress = http://localhost:5118
+
+GET {{DistribuidoraX.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,803 @@
+﻿@using DistribuidoraX.SitioWeb.Models.ProductModels.ViewModels
+@model ProductsViewModel
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid mt-0">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-box-seam"></i> Administración de Productos
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="container-fluid  border-top border-bottom border-dark mb-2 pt-2 ps-0 pe-0 ps-lg-4 pe-lg-4">
+                <div class="row mb-2">
+                    <div class="col-lg-1 text-start mt-2">
+                        <label asp-for="ProductCodeFilter"></label>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <input asp-for="ProductCodeFilter" class="form-control" onblur="productCodeFilterValidate(this)" placeholder="Clave del producto" />
+                        <span id="codeFilterSpan" class="text-danger" style="display:none;"></span>
+                    </div>
+
+                    <div class="col-lg-4 text-lg-end text-lg-end text-md-start mt-2">
+                        <label asp-for="TypeProductItemFilter"></label>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <select asp-for="TypeProductItemFilter"
+                                asp-items="@(new SelectList(Model.TypeProductList, "TypeProductItem", "TypeProductName"))"
+                                class="form-select">
+                            <option value="0">Todos</option>
+                        </select>
+                       
+                        @if (!Model.TypeProductMessageError.Equals(string.Empty))
+                        {
+                            <span class="text-danger">@Model.TypeProductMessageError</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="row align-items-end">
+                    <div class="col-md-10"></div>
+                    <div class="col-md-2">
+                        @if (!Model.TypeProductMessageError.Equals(string.Empty))
+                        {
+                            <button class="btn btn-secondary w-100" disabled>
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100" onclick="searchProducts()">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="row mt-5 mb-5">
+                    <div id="productsTableContainer" class="col-md-12">
+                        <!-- Tabla -->
+                        @await Html.PartialAsync("_ProductsTablePartialView", Model.ProductsTableModel)
+                    </div>
+                    
+                    <div class="col-md-10"></div>
+                    <div class="col-md-2 align-items-end">
+                        @if (Model.ProductsTableModel!.ProductListErrorMessage.Equals(string.Empty))
+                        {
+                            <button onclick="showAddUpdateProduct(0)" class="btn btn-secondary w-100">Agregar</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100" disabled>Agregar</button>
+                        }
+                        
+                    </div>
+                    
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="productGenericModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-sm-down modal-fullscreen-md-down modal-lg modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="mb-0 modal-title" id="productGenericModalTitle">
+                    <i class="bi bi-box-seam"></i> Producto
+                </h5>
+            </div>
+
+            <div class="modal-body" id="productGenericModalContent"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadingGenericModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <!-- Spinner de Bootstrap -->
+                <div id="genericLoadingModalSpinner" class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <div id="genericLoadingModalMessage"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="supplierGenericModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="mb-0 modal-title" id="supplierGenericModalTitle">
+                    <i class="bi bi-box-seam"></i> Proveedor
+                </h5>
+            </div>
+
+            <div class="modal-body p-0" id="supplierGenericModalContent"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteGenericModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="mb-0 modal-title" id="deleteModalTittle">
+                    <i class="bi bi-box-seam"></i> Eliminar Proveedor
+                </h5>
+            </div>
+
+            <div class="modal-body bg-opacity-10 bg-danger" id="deleteGenericModalContent"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmGenericModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="mb-0 modal-title" id="confirModalTittle">
+                    <i class="bi bi-box-seam"></i> Confirmacion
+                </h5>
+            </div>
+
+            <div class="modal-body bg-opacity-10 bg-primary" id="confirmGenericModalContent"></div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    function productCodeFilterValidate(event){
+        var productCodeValue = event.value;
+
+        $.ajax({
+            url: '/Products/ProductCodeFilterValidate',
+            type: 'GET',
+            data: { productCodeFilter: productCodeValue },
+            success: function(e) {
+                console.log('Validacion:', e);
+                if(e.isError == true){
+                    $("#codeFilterSpan").text(e.message);
+                    $("#codeFilterSpan").show();
+                }else{
+                    $("#codeFilterSpan").text(e.message);
+                    $("#codeFilterSpan").hide();
+                }
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function searchProducts(){
+        $("#genericLoadingModalMessage").html(loadingModalContentElements('Buscando productos, por favor espere...','secondary'));
+        $("#genericLoadingModalSpinner").show();
+        $("#loadingGenericModal").modal("show");
+        const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+        loadingGenericModalBtnClose.disabled = true;
+
+        const productCodeValue = $('#ProductCodeFilter').val();
+        const typeProductElement = document.getElementById('TypeProductItemFilter');
+
+        const arrayTypeProductValue = Array.from(typeProductElement.options)
+                                    .filter(option => option.selected)
+                                    .map(option => option.value);
+        const arrayTypeProductNombre = Array.from(typeProductElement.options)
+                                    .filter(option => option.selected)
+                                    .map(option => option.text);
+
+        const filters = {ProductCode: productCodeValue, TypeProductItem: arrayTypeProductValue[0], TypeProductName: arrayTypeProductNombre[0]};
+
+        $.ajax({
+            url: '/Products/SearchProducts',
+            type: 'GET',
+            data: filters,
+            success: function(response) {
+                console.log('Actualizado con éxito:', response);
+                $("#productsTableContainer").html(response);
+                $("#genericLoadingModalSpinner").hide();
+                $("#genericLoadingModalMessage").html(loadingModalContentElements('Busqueda realizada!','success'));
+                const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+                loadingGenericModalBtnClose.disabled = false;
+            },
+            error: function(error) {
+                console.error('Error:', error);
+                $("#genericLoadingModalSpinner").hide();
+                $("#genericLoadingModalMessage").html(loadingModalContentElements('Ocurrió algo inesperado: Consulte al administrador del aplicativo.','danger'));
+                const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+                loadingGenericModalBtnClose.disabled = false;
+            }
+        });
+
+    }
+
+    function loadingModalContentElements(message,behaivor){
+        const messageElement = '<h5 class="mt-5 mb-5 text-'+behaivor+'">'+message+'</h5>';
+        const buttonElement = '<button id="genericLoadingModalBtnClose" onclick="cancelOperationCloseModal(\'loading\')" disabled class="btn btn-sm  btn-'+behaivor+'">Acceptar</button>';
+        const contentElements = messageElement + buttonElement;
+        return contentElements;
+    }
+
+    function confirmProductOperation(typeOperationParam,typeModalParam){
+        if(typeOperationParam == 'cancel'){
+            const dataParam = { 
+                modalTitleParam: 'Salir de ' + typeModalParam,
+                urlParam: '/Products/ConfirmCancelProductOperationShowModal'
+            };
+
+            confirmOperationShowModal(dataParam);
+        }else{
+            const dataParam = {
+                modalTitleParam: 'Guardar ' + typeModalParam,
+                urlParam: '/Products/ConfirmAcceptProductOperationShowModal'
+            };
+
+            confirmOperationShowModal(dataParam);
+        }
+    }
+
+    function confirmOperationShowModal(dataParam){
+        $.ajax({
+            url: dataParam.urlParam,
+            type: 'GET',
+            success: function(e) {
+                console.log('Validacion:', e);
+                $("#confirModalTittle").text(dataParam.modalTitleParam);
+                $("#confirmGenericModalContent").html(e);
+                $("#confirmGenericModal").modal("show");
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function cancelOperationCloseModal(typeModal){
+        const modalElement ="#"+typeModal+"GenericModal";
+        console.log(modalElement);
+        $(modalElement).modal("hide");
+    }
+
+    function cancelOperationCloseTwoModals(typeModal1,typeModal2){
+        const modalElementId1 ="#"+typeModal1+"GenericModal";
+        const modalElementId2 ="#"+typeModal2+"GenericModal";
+        $(modalElementId1).modal("hide");
+        $(modalElementId2).modal("hide");
+    }
+
+    function deleteProductConfirmation(itemParam){
+        $('#deleteModalTittle').text("Eliminar Producto");
+
+        $.ajax({
+            url: '/Products/GetProductByConfirmDelete',
+            type: 'GET',
+            data: { item: itemParam },
+            success: function(e) {
+                console.log('Validacion:', e);
+                $("#deleteGenericModalContent").html(e);
+                $("#deleteGenericModal").modal("show");
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+        
+    }
+
+    function deleteProduct(itemParam){
+        $("#deleteGenericModal").modal("hide");
+        $("#genericLoadingModalMessage").html(loadingModalContentElements('Eliminando producto, por favor espere...','secondary'));
+        $("#genericLoadingModalSpinner").show();
+        $("#loadingGenericModal").modal("show");
+        const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+        loadingGenericModalBtnClose.disabled = true;
+
+        $.ajax({
+            url: '/Products/DeleteProduct',
+            type: 'DELETE',
+            data: { item: itemParam },
+            success: function(e) {
+                console.log('Validacion:', e);
+                $("#genericLoadingModalSpinner").hide();
+
+                if(e.isSuccess){
+                    $("#genericLoadingModalMessage").html(loadingModalContentElements(e.message,'success'));
+                    updateTableProducts();
+                }else{
+                    $("#genericLoadingModalMessage").html(loadingModalContentElements(e.message,'danger'));
+                }
+                
+                const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+                loadingGenericModalBtnClose.disabled = false;
+            },
+            error: function(error) {
+                console.error('Error:', error);
+                $("#genericLoadingModalSpinner").hide();
+                $("#genericLoadingModalMessage").html(loadingModalContentElements('Ocurrió algo inesperado: Consulte al administrador del aplicativo.','danger'));
+                const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+                loadingGenericModalBtnClose.disabled = false;
+            }
+        });
+
+    }
+
+    function updateTableProducts(){
+        const filters = {ProductCode: null, TypeProductItem: 0, TypeProductName: null};
+
+        $.ajax({
+            url: '/Products/SearchProducts',
+            type: 'GET',
+            data: filters,
+            success: function(response) {
+                console.log('Actualizado con éxito:', response);
+                $("#productsTableContainer").html(response);
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function showAddUpdateProduct(itemParam){
+        if(itemParam == 0){
+            $('#productGenericModalTitle').text("Agregar Producto");
+        }
+
+        if(itemParam > 0){
+            $('#productGenericModalTitle').text("Editar Producto");
+        }
+
+        $.ajax({
+            url: '/Products/AddUpdateProduct',
+            type: 'GET',
+            data: { id:itemParam },
+            success: function(response) {
+                console.log('Actualizado con éxito:', response);
+                $("#productGenericModalContent").html(response);
+                $("#productGenericModal").modal("show");
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+
+    }
+
+    function cancelSupplierOperationCloseModal(){
+        $("#supplierGenericModal").modal("hide");
+        $("#productGenericModal").modal("show");
+    }
+
+    function showAddUpdateSupplier(itemParam){
+
+        let productSupplierList = null;
+        if(itemParam == 0){
+            $('#supplierGenericModalTitle').text("Nuevo Proveedor");
+        }else{
+            $('#supplierGenericModalTitle').text("Editar Proveedor");
+            productSupplierList = getDataProductSuplierTable();
+            console.log(productSupplierList);
+        }
+
+        const productSupplierData = { id: itemParam, ProductSupplierList: productSupplierList};
+
+        $.ajax({
+            url: '/Products/ShowAddUpdateNewSupplier',
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(productSupplierData),
+            success: function(response) {
+                console.log('Actualizado con éxito:', response);
+                $("#supplierGenericModalContent").html(response);
+                $("#supplierGenericModal").modal("show");
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function saveSupplier(itemParam){
+        let isErrorValidate = false;
+        const elementsData = getElementsData(itemParam,'SupplierItem','ProductSupplierCode','ProductSupplierCost');
+        const ProductSupplierUpdateData = { ProductSupplierItem: elementsData.itemValue,
+                                            SupplierItem: elementsData.selectItemValue,
+                                            SupplierName: elementsData.selectNameValue,
+                                            ProductSupplierCode: elementsData.inputField1Value,
+                                            ProductSupplierCost: parseFloat(elementsData.inputField2Value)
+                                        };
+        
+        if(ProductSupplierUpdateData.SupplierItem == 0){
+            isErrorValidate = true;
+            const dataParam = { validateParamValue: ProductSupplierUpdateData.SupplierItem,
+                            urlParam: '/Products/MultiSelectFieldValidate',
+                            spamIdJqueryParam: "#supplierItemSpanError",
+                            btnIdParam: 'btnSaveSupplier'
+                        };
+
+            validateFieldFuntion(dataParam);
+        }
+
+        if(ProductSupplierUpdateData.ProductSupplierCode == ''){
+            isErrorValidate = true;
+            const dataParam = { validateParamValue: ProductSupplierUpdateData.ProductSupplierCode,
+                            urlParam: '/Products/CodeFieldValidate',
+                            spamIdJqueryParam: "#productSupplierCodeSpanError",
+                            btnIdParam: 'btnSaveSupplier'
+                        };
+
+            validateFieldFuntion(dataParam);
+        }
+        
+        if(isErrorValidate == false){
+            $("#supplierGenericModal").modal("hide");
+            const ProductSupplierList = getDataProductSuplierTable();
+            const productSupplierData = {ProductSupplierUpdateData, ProductSupplierList};
+
+            if(ProductSupplierUpdateData.ProductSupplierItem == 0){
+                $.ajax({
+                    url: '/Products/AddSupplier_UpdateProductSupplierTable',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(productSupplierData),
+                    success: function(response) {
+                        console.log('Actualizado con éxito:', response);
+                        $("#productSupplierTableContainer").html(response);
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+
+            }else{
+                $.ajax({
+                    url: '/Products/UpdateSupplier_UpdateProductSupplierTable',
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(productSupplierData),
+                    success: function(response) {
+                        console.log('Actualizado con éxito:', response);
+                        $("#productSupplierTableContainer").html(response);
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+
+            }
+
+        }
+        
+    }
+
+    function deleteSupplierConfirmation(itemParam){
+        $('#deleteModalTittle').text("Eliminar Proveedor");
+        const productSupplierList = getDataProductSuplierTable();
+        const productSupplierData = { id: itemParam, ProductSupplierList: productSupplierList};
+
+        $.ajax({
+            url: '/Products/SuppliertByConfirmDelete',
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(productSupplierData),
+            success: function(e) {
+                console.log('Validacion:', e);
+                $("#deleteGenericModalContent").html(e);
+                $("#deleteGenericModal").modal("show");
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+
+    }
+
+    function deleteProductSupplier(itemParam){
+        $("#deleteGenericModal").modal("hide");
+
+        const productSupplierList = getDataProductSuplierTable();
+        const productSupplierData = { id: itemParam, ProductSupplierList: productSupplierList};
+
+        $.ajax({
+                url: '/Products/deleteSupplier_UpdateProductSupplierTable',
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(productSupplierData),
+                success: function(response) {
+                    console.log('Actualizado con éxito:', response);
+                    $("#productSupplierTableContainer").html(response);
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                }
+            });
+
+    }
+
+
+    function getDataProductSuplierTable(){
+        const productSuplierTableElement = document.querySelector("#elementoTabla");
+        const tableRows = Array.from(productSuplierTableElement.querySelectorAll("tr")).slice(1);
+
+        const tableData = tableRows.map(fila => {
+            const cells = fila.querySelectorAll("td");
+            return {
+                ProductSupplierItem: parseInt(cells[0].innerText, 10),
+                SupplierName: cells[2].innerText,
+                ProductSupplierCode: cells[3].innerText,
+                ProductSupplierCost: parseFloat(cells[4].innerText.slice(1).trim()),
+                SupplierItem: parseInt('0', 10)
+            };
+        });
+
+        return tableData;
+    }
+
+    function getElementsData(itemParam,selectIdParam,inputField1Param,inputField2Param){
+
+        const selectElement = document.getElementById(selectIdParam);
+        const arraySupplierItem = Array.from(selectElement.options)
+                                .filter(option => option.selected)
+                                .map(option => option.value);
+        const arraySupplierName = Array.from(selectElement.options)
+                            .filter(option => option.selected)
+                            .map(option => option.text);
+
+        const selectItemParam = parseInt(arraySupplierItem[0], 10);
+        const selectNameParam = arraySupplierName[0];
+        const inputFieldParam1 = document.getElementById(inputField1Param).value;
+        const inputFieldParam2 = document.getElementById(inputField2Param).value;
+
+        const dataResponse ={ itemValue: itemParam, 
+                                selectItemValue: selectItemParam, 
+                                selectNameValue: selectNameParam, 
+                                inputField1Value: inputFieldParam1,
+                                inputField2Value: inputFieldParam2
+                            };
+
+        return dataResponse;
+    }
+
+    function productSupplierCostFieldValidate(valueParam){
+
+        const dataParam = { validateParamValue: valueParam,
+                            urlParam: '/Products/ProductSupplierCostFieldValidate',
+                            spamIdJqueryParam: "#productSupplierCostSpanError",
+                            btnIdParam: 'btnSaveSupplier'
+                        };
+
+        validateFieldFuntion(dataParam);
+    }
+
+    function productSupplierCodeFieldValidate(valueParam1, valueParam2){
+
+        const dataParam = { validateParamValue: valueParam1,
+                            urlParam: '/Products/ProductSupplierCodeFieldValidate',
+                            spamIdJqueryParam: "#productSupplierCodeSpanError",
+                            btnIdParam: 'btnSaveSupplier',
+                            validateParamValue2: valueParam2
+                        };
+
+        const existCodeParametersModel ={ Item: dataParam.validateParamValue2, CodeValue: dataParam.validateParamValue};
+
+        $.ajax({
+            url: dataParam.urlParam,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(existCodeParametersModel),
+            success: function(e) {
+                console.log('Validacion:', e);
+                if(e.isError == true){
+                    $(dataParam.spamIdJqueryParam).text(e.message);
+                    $(dataParam.spamIdJqueryParam).show();
+                    document.getElementById(dataParam.btnIdParam).disabled = true;
+                }else{
+                    $(dataParam.spamIdJqueryParam).text(e.message);
+                    $(dataParam.spamIdJqueryParam).hide();
+                    document.getElementById(dataParam.btnIdParam).disabled = false;
+                }
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function productSupplierMultiSelectValidate(){
+
+        const selectElement = document.getElementById('SupplierItem');
+        const arraySupplierItem = Array.from(selectElement.options)
+                                .filter(option => option.selected)
+                                .map(option => option.value);
+       
+        const multiSelectValue = arraySupplierItem[0];
+        const dataParam = { validateParamValue: multiSelectValue,
+                            urlParam: '/Products/MultiSelectFieldValidate', 
+                            spamIdJqueryParam: "#supplierItemSpanError", 
+                            btnIdParam: 'btnSaveSupplier'
+                        };
+
+        validateFieldFuntion(dataParam);
+    }
+
+    function productCodeFieldValidate(valueParam1, valueParam2){
+
+        const dataParam = { validateParamValue: valueParam1,
+                            urlParam: '/Products/ProductCodeFieldValidate',
+                            spamIdJqueryParam: "#productCodeSpanError",
+                            btnIdParam: 'btnSaveProduct',
+                            validateParamValue2: valueParam2
+                        };
+
+        const existCodeParametersModel ={ Item: dataParam.validateParamValue2, CodeValue: dataParam.validateParamValue};
+
+        $.ajax({
+            url: dataParam.urlParam,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(existCodeParametersModel),
+            success: function(e) {
+                console.log('Validacion:', e);
+                if(e.isError == true){
+                    $(dataParam.spamIdJqueryParam).text(e.message);
+                    $(dataParam.spamIdJqueryParam).show();
+                    document.getElementById(dataParam.btnIdParam).disabled = true;
+                }else{
+                    $(dataParam.spamIdJqueryParam).text(e.message);
+                    $(dataParam.spamIdJqueryParam).hide();
+                    document.getElementById(dataParam.btnIdParam).disabled = false;
+                }
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function productNameFieldValidate(valueParam){
+
+        const dataParam = { validateParamValue: valueParam,
+                            urlParam: '/Products/ProductNameFieldValidate',
+                            spamIdJqueryParam: "#productNameSpanError",
+                            btnIdParam: 'btnSaveProduct'
+                        };
+
+        validateFieldFuntion(dataParam);
+    }
+
+    function typeProductMultiSelectValidate(){
+
+        const selectElement = document.getElementById('TypeProductId');
+        const arrayTypeProductItem = Array.from(selectElement.options)
+                                .filter(option => option.selected)
+                                .map(option => option.value);
+
+        const multiSelectValue = arrayTypeProductItem[0];
+        const dataParam = { validateParamValue: multiSelectValue,
+                            urlParam: '/Products/MultiSelectFieldValidate',
+                            spamIdJqueryParam: "#typeProductItemSpanError",
+                            btnIdParam: 'btnSaveProduct'
+                        };
+
+        validateFieldFuntion(dataParam);
+    }
+
+
+    function validateFieldFuntion(dataParam){
+        $.ajax({
+                url: dataParam.urlParam,
+                type: 'GET',
+                data: { paramValue: dataParam.validateParamValue },
+                success: function(e) {
+                    console.log('Validacion:', e);
+                    if(e.isError == true){
+                        $(dataParam.spamIdJqueryParam).text(e.message);
+                        $(dataParam.spamIdJqueryParam).show();
+                        document.getElementById(dataParam.btnIdParam).disabled = true;
+                    }else{
+                        $(dataParam.spamIdJqueryParam).text(e.message);
+                        $(dataParam.spamIdJqueryParam).hide();
+                        document.getElementById(dataParam.btnIdParam).disabled = false;
+                    }
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                }
+            });       
+    }
+
+    function saveProduct(typeModal){
+        const confirmModalElementId ="#"+typeModal+"GenericModal";
+        $(confirmModalElementId).modal("hide");
+
+        let isErrorValidate = false;
+        const itemParam = $("#btnSaveProduct").data("item");
+        const elementsData = getElementsData(itemParam,'TypeProductId','ProductCode','ProductName');
+        const activeCheckValue = document.getElementById('productActiveCheck').checked;
+        let productData = { ProductItem: elementsData.itemValue,
+                            ProductCode: elementsData.inputField1Value,
+                            ProductName: elementsData.inputField2Value,
+                            TypeProductItem: elementsData.selectItemValue,
+                            ProductActive: activeCheckValue
+                        };
+
+        console.log(productData);
+        
+        if(productData.TypeProductItem == 0){
+            isErrorValidate = true;
+            typeProductMultiSelectValidate();
+        }
+
+        if(productData.ProductCode == ''){
+            isErrorValidate = true;
+            productCodeFieldValidate(productData.ProductCode, productData.ProductItem);
+        }
+
+        if(productData.ProductName == ''){
+            isErrorValidate = true;
+            productNameFieldValidate(productData.ProductName);
+        }
+        
+        if(isErrorValidate == false){
+            $("#genericLoadingModalMessage").html(loadingModalContentElements('Guardando producto, por favor espere...','secondary'));
+            $("#genericLoadingModalSpinner").show();
+            $("#loadingGenericModal").modal("show");
+
+            const ProductSupplierList = getDataProductSuplierTable();
+            const productSupplierData = { productData, ProductSupplierList };
+
+            $.ajax({
+                url: '/Products/SaveProductSupplierFullData', // URL del endpoint
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(productSupplierData),
+                success: function(e) {
+                    console.log('response:', e);
+                    $("#genericLoadingModalSpinner").hide();
+
+                if(e.isSuccess){
+                    $("#productGenericModal").modal("hide");
+                    $("#genericLoadingModalMessage").html(loadingModalContentElements(e.message,'success'));
+                    updateTableProducts();
+                }else{
+                    $("#genericLoadingModalMessage").html(loadingModalContentElements(e.message,'danger'));
+                    if(e.propertyName != ''){
+                        const idElementSpanError = "#" + e.propertyName + "SpanError";
+                        $(idElementSpanError).text(e.validationError);
+                        $(idElementSpanError).show();
+                    }
+                    
+                }
+
+                const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+                loadingGenericModalBtnClose.disabled = false;
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                    $("#genericLoadingModalSpinner").hide();
+                    $("#genericLoadingModalMessage").html(loadingModalContentElements('Ocurrió algo inesperado: Consulte al administrador del aplicativo.','danger'));
+                    const loadingGenericModalBtnClose = document.getElementById('genericLoadingModalBtnClose');
+                    loadingGenericModalBtnClose.disabled = false;
+                }
+            });
+        } 
+
+    }
+
+</script>
+

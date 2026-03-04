@@ -1,0 +1,58 @@
+﻿@using DistribuidoraX.SitioWeb.Models.SupplierModels.ViewModels
+@model SupplierViewModel
+
+<div class="container">
+    <div class="mt-2 mb-4 pt-3 border-top border-bottom border-dark p-0 pe-sm-0 pe-lg-5">
+
+        <div class="row mt-2 mb-3 ps-lg-5">
+            <div class="col-sm-12 col-md-5 ps-sm-2 ps-lg-5">
+                <label class="ps-sm-2 ms-lg-2 ps-lg-5 ms-lg-5" asp-for="SupplierName"></label><span>:</span>
+            </div>
+            <div class="col-md-7">
+                <div class="col-md-12">
+                    <select asp-for="SupplierItem" onchange="productSupplierMultiSelectValidate()"
+                            asp-items="@(new SelectList(Model.SuppliersList, "SupplierItem", "SupplierName"))"
+                            class="form-select" style="width:70%;">
+                        <option value="0">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <span id="supplierItemSpanError" class="text-danger" style="display:none;"></span>
+                </div>
+                
+            </div>
+        </div>
+
+        <div class="row mb-3 ps-lg-5">
+            <div class="col-sm-12 col-md-5 ps-sm-2 ps-lg-5">
+                <label class="ps-sm-2 ms-lg-2 ps-lg-5 ms-lg-5" asp-for="ProductSupplierCode"></label><span>:</span>
+            </div>
+            <div class="col-md-7">
+                <input asp-for="ProductSupplierCode" onchange="productSupplierCodeFieldValidate(this.value, @Model.ProductSupplierItem)" class="form-control w-50" placeholder="Clave del producto" />
+                <span id="productSupplierCodeSpanError" class="text-danger" style="display:none;"></span>
+            </div>
+        </div>
+
+        <div class="row mb-3 ps-lg-5">
+            <div class="col-sm-12 col-md-5 ps-sm-2 ps-lg-5">
+                <label class="ps-sm-2 ms-lg-2 ps-lg-5 ms-lg-5" asp-for="ProductSupplierCost"></label><span>:</span>
+            </div>
+
+            <div class="col-md-7">
+                <span class="form-control w-50">$<input asp-for="ProductSupplierCost" onchange="productSupplierCostFieldValidate(this.value)" type="text" value="@Model.ProductSupplierCost.ToString("F", System.Globalization.CultureInfo.InvariantCulture)" onfocus="this.select();" style="outline:none; border:none; display:inline; width:50%;" placeholder="Costo" /></span>
+                <span id="productSupplierCostSpanError" class="text-danger" style="display:none;"></span>
+            </div>
+
+        </div>
+
+
+        <div class="row mb-3 mt-4 pe-sm-0 pe-lg-5">
+            <div class="text-lg-end text-sm-center">
+                <button onclick="cancelSupplierOperationCloseModal()" class="btn btn-secondary">Cancelar</button>
+                <button id="btnSaveSupplier" onclick="saveSupplier(@Model.ProductSupplierItem)" class="btn btn-info ms-4" data-id="@Model.ProductSupplierItem"><span class="text-black-50 fw-bold">Guardar</span></button>
+            </div>
+        </div>
+
+    </div>
+
+</div>

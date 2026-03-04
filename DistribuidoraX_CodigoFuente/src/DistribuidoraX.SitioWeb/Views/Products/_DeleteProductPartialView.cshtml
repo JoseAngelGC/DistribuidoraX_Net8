@@ -1,0 +1,37 @@
+﻿@using DistribuidoraX.SitioWeb.Models.ProductModels.ViewModels
+@model DeleteProductViewModel
+
+<div class="container p-0">
+    <p class="fw-bold text-danger">¿Deseas eliminar el registro?</p>
+    
+    <div class="container mt-2 mb-5 border-top border-bottom border-dark pt-1">
+        <div class="row mt-3 mb-3">
+            <div class="col-sm-6 col-md-6 text-sm-start text-lg-end">
+                <label asp-for="NameProduct" class="fw-bold"></label><span class="fw-bold">:</span>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <span>@Model.NameProduct</span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-6 col-md-6 text-sm-start text-lg-end">
+                <label asp-for="CodeProduct" class="fw-bold"></label><span class="fw-bold">:</span>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <span>@Model.CodeProduct</span>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-6 col-md-6 text-sm-start text-lg-end">
+                <label asp-for="PriceProduct" class="fw-bold"></label><span class="fw-bold">:</span>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <span>@Model.PriceProduct.ToString("F", System.Globalization.CultureInfo.InvariantCulture)</span>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-5 mb-3">
+        <button onclick="cancelOperationCloseModal('delete')" class="btn btn-secondary me-4">NO</button>
+        <button onclick="deleteProduct(@Model.ItemProduct)" class="btn btn-danger">SI</button>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+﻿@using DistribuidoraX.SitioWeb.Models.CustomerErrorsModels.ViewModels
+@model CustomerErrorViewModel
+
+@{
+    ViewData["Title"] = "ProductError";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 class="text-danger">¡Ups! Algo salió mal.</h1>
+<p>@Model.genericMessage</p>
+
+@if (!Model.ErrorMessage.Equals(string.Empty))
+{
+    <p> Detalle: @Model.ErrorMessage</p>
+}
+
